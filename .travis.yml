@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t bebofit/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true bebofit/react-test npm test
+
+after_success:
+  - docker build -t bebofit/multi-client ./client
+  - docker build -t bebofit/multi-nginx ./nginx
+  - docker build -t bebofit/multi-server ./server
+  - docker build -t bebofit/multi-worker ./worker
+  # log in to docker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take these images and push them to docker hub
+  - docker push bebofit/multi-client
+  - docker push bebofit/multi-nginx
+  - docker push bebofit/multi-server
+  - docker push bebofit/multi-worker
